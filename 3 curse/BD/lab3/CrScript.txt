@@ -1,0 +1,60 @@
+pragma foreign_keys=on;
+
+create table Plan
+(
+	name_plan varchar(100) unique not null,
+	ID_plan integer,
+	ID_status integer,
+	ID_spec integer,
+	ID_forma integer,
+	add_year integer,
+	duration real,
+	am_of_disc integer,
+	PRIMARY KEY(ID_plan),
+	FOREIGN KEY (ID_status) REFERENCES Status (ID_status) ON DELETE CASCADE,
+	FOREIGN KEY (ID_spec) REFERENCES Specialnost (ID_spec) ON DELETE CASCADE,
+	FOREIGN KEY (ID_forma) REFERENCES Forma_obucheniya (ID_forma) ON DELETE CASCADE
+);
+
+create table Status
+(
+	name_status varchar(20) unique not null,
+	ID_status integer primary key
+);
+
+create table Specialnost
+(
+	name_spec varchar(100) unique not null,
+	ID_spec integer primary key,
+	ID_spez integer,
+	ID_kaf integer,
+	FOREIGN KEY (ID_spez) REFERENCES Spez (ID_spez) ON DELETE CASCADE,
+	FOREIGN KEY (ID_kaf) REFERENCES Kafedra (ID_kaf) ON DELETE CASCADE
+);
+
+create table Spez
+(
+	ID_spez integer primary key,
+	name_spez varchar(100) unique not null
+);
+
+create table Potok
+(
+	name_potok varchar(10) unique not null,
+	amount integer,
+	ID_potok integer primary key,
+	ID_plan integer,
+	FOREIGN KEY (ID_plan) REFERENCES Plan (ID_plan) ON DELETE CASCADE
+);
+
+create table Kafedra
+(
+	name_kaf varchar(20) unique not null,
+	ID_kaf integer primary key
+);
+
+create table Forma_obucheniya
+(
+	name_forma varchar(100) unique not null,
+	ID_forma integer primary key
+);

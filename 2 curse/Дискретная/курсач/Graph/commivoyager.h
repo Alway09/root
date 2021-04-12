@@ -1,0 +1,4 @@
+#ifndef COMMIVOYAGER_H
+#define COMMIVOYAGER_H
+
+#endif // COMMIVOYAGER_H

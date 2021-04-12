@@ -1,0 +1,7 @@
+create table Plan(name_plan varchar(100), ID_plan integer primary key, ID_status integer, ID_spec integer, ID_forma integer, add_year integer, duration real, am_of_disc integer);
+create table Status(name_status varchar(20), ID_status integer primary key);
+create table Specialnost(name_spec varchar(100), ID_spec integer primary key, ID_spez integer, ID_kaf integer);
+create table Spez(ID_spec integer primary key, name_spez varchar(100));
+create table Potok(name_potok varchar(10), amount integer, ID_potok integer primary key, ID_plan integer);
+create table Kafedra(name_kaf varchar(20), ID_kaf integer primary key);
+create table Forma_obucheniya(name_forma varchar(100), ID_forma integer primary key);
