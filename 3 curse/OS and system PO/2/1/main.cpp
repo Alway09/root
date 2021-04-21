@@ -35,7 +35,13 @@ int main(int argc, char **argv){
         }else{
             cout << "Process created\n";
             int ch_pid = wait(&status);
-            cout << "Process with PID " << ch_pid << " is over with code " << status << "\n\n";
+
+            if(WIFEXITED(status)){
+                cout << "Success\n";
+            } else{
+                cout << "Not Success\n";
+            }
+            //cout << "Process with PID " << ch_pid << " is over with code " << status << "\n\n";
         }
     }
 

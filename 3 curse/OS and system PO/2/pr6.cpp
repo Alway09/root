@@ -17,7 +17,7 @@ int *ip = (int *)p;
 int tmp, n;  
   
 tmp = tot_items; 
-for (n = 0;n<50000;n++) tot_items = tmp + *ip; 
+for (n = 0;n<50000;n++) tot_items = tot_items + *ip; 
 } 
   
 int main ( ) 

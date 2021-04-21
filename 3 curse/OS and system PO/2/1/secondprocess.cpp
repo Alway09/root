@@ -9,6 +9,6 @@ int main(int argc, char *argv[]){
         cout << argv[i] << " ";
     }
     cout << "\n";
-    
+
     return 0;
 }
