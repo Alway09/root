@@ -11,7 +11,6 @@ void* compute_thread(void * argument)
     x++;
     sleep(2);
     printf("X value in thread after sleep = %d\n",x);
-    //return;
 }
 
 

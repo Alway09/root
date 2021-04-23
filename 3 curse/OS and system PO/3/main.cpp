@@ -18,7 +18,7 @@ struct buffer
     int amount;     // количество записанных символов
     int* start;     // начало буфера
     int* end;       // конец буфера
-    int* data;
+    int* data;      // указатель на начало буфера
 } buf;
 
 pthread_mutex_t buf_mutex;
