@@ -10,14 +10,15 @@ using namespace std;
 void* write_task(void*);
 void* read_task(void*);
 bool buffer_init(int);
-void print_str_info(int, bool);
+void print_str_info(int, bool, int);
 
 struct buffer
 {
     int size;       // общий размер
-    int amount;     // количество заприсанных символов
+    int amount;     // количество записанных символов
     int* start;     // начало буфера
     int* end;       // конец буфера
+    int* data;
 } buf;
 
 pthread_mutex_t buf_mutex;
@@ -25,23 +26,73 @@ pthread_cond_t buf_cond;
 pthread_cond_t buf_size_sync_overwrite;
 pthread_cond_t buf_size_sync_equal;
 
-int main(){
+int main(int argc, char* argv[]){
+    if(argc != 2){
+        cout << "One parameter needed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    int buffer_size = atoi(argv[1]);
+    if(buffer_size < 3 || buffer_size > 50){
+        cout << "Incorrect buffer size!\n";
+        cout << "Correct: 3-50\n";
+        exit(EXIT_FAILURE);
+    }
+
     pthread_t read_thread;
     pthread_t write_thread;
     pthread_attr_t attr;
 
-    pthread_attr_init(&attr);
-    pthread_mutex_init(&buf_mutex, NULL);
-    pthread_cond_init(&buf_cond, NULL);
-    pthread_cond_init(&buf_size_sync_overwrite, NULL);
-    pthread_cond_init(&buf_size_sync_equal, NULL);
-    if(!buffer_init(12)){
+    int res = pthread_attr_init(&attr);
+    if(res != 0){
+        cout << "Thread attribute initialization failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_mutex_init(&buf_mutex, NULL);
+    if(res != 0){
+        cout << "Buf mutex initialization failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_cond_init(&buf_cond, NULL);
+    if(res != 0){
+        cout << "Buf cond var initialization failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_cond_init(&buf_size_sync_overwrite, NULL);
+    if(res != 0){
+        cout << "Buf size sync overwrite cond var initialization failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_cond_init(&buf_size_sync_equal, NULL);
+    if(res != 0){
+        cout << "Buf size sync equal cond var initialization failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if(!buffer_init(buffer_size-1)){
         return EXIT_FAILURE;
     }
 
-    pthread_create(&write_thread, &attr, write_task, (void*)NULL);
-    pthread_create(&read_thread, &attr, read_task, (void*)NULL);
-    pthread_join(write_thread, NULL);
+    res = pthread_create(&write_thread, &attr, write_task, (void*)NULL);
+    if(res != 0){
+        cout << "Write thread creation failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_create(&read_thread, &attr, read_task, (void*)NULL);
+    if(res != 0){
+        cout << "Read thread creation failed!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_join(write_thread, NULL);
+    if(res != 0){
+        cout << "Thread join failed!\n";
+    }
     return EXIT_SUCCESS;
 }
 
@@ -51,6 +102,7 @@ bool buffer_init(int size){
         buf.amount = 0;
         buf.start = new int[buf.size];
         buf.end = buf.start;
+        buf.data = buf.start;
     }else{
         cout << "Can not initialize buffer!\n";
         return false;
@@ -62,9 +114,11 @@ bool buffer_init(int size){
 void* write_task(void* arg){
     int counter = 0;
     int elems_counter = 0;
+    int pos = 0;
     while(true){
         pthread_mutex_lock(&buf_mutex);
         *buf.start = counter;
+        pos = elems_counter;
 
         if(buf.amount == buf.size){
             pthread_cond_wait(&buf_size_sync_overwrite, &buf_mutex);
@@ -80,7 +134,7 @@ void* write_task(void* arg){
 
         pthread_mutex_unlock(&buf_mutex);
 
-        print_str_info(counter, true);
+        print_str_info(counter, true, pos);
 
         if(counter == 9){
             counter = 0;
@@ -97,6 +151,8 @@ void* write_task(void* arg){
 void* read_task(void* arg){
     int current_symbol;
     int elems_counter = 0;
+    int pos = 0;
+    usleep(10000);
     while(true){
         pthread_mutex_lock(&buf_mutex);
 
@@ -105,6 +161,7 @@ void* read_task(void* arg){
         }
 
         current_symbol = *buf.end;
+        pos = elems_counter;
 
         if(elems_counter == buf.size){
             pthread_cond_signal(&buf_size_sync_overwrite);
@@ -118,7 +175,7 @@ void* read_task(void* arg){
 
         pthread_mutex_unlock(&buf_mutex);
 
-        print_str_info(current_symbol, false);
+        print_str_info(current_symbol, false, pos);
 
         usleep(rand() % 1500000 + 500000);
         //usleep(500000);
@@ -126,10 +183,28 @@ void* read_task(void* arg){
     }
 }
 
-void print_str_info(int symbol, bool mode){     //write - true, read - false
+void print_str_info(int symbol, bool mode, int current_pos){     //write - true, read - false
     if(mode){
-        cout << "Write thread::symbol wrote - " << symbol << "                            \n";
+        //out << "Write thread::symbol wrote - " << symbol << "                            \n";
+        cout << "     " << "   ";
+        for(int i = 0; i <= buf.size; ++i){
+            if(i == current_pos){
+                cout << "*";
+            }else{
+                cout << buf.data[i];
+            }
+        }
+        cout << "   W - " << symbol << "\n";
     }else{
-        cout << "                                 "           << "Read thread::symbol readed - " << symbol << "\n";
+        //cout << "                                 "           << "Read thread::symbol readed - " << symbol << "\n";
+        cout << "R - " << symbol << "   ";
+        for(int i = 0; i <= buf.size; ++i){
+            if(i == current_pos){
+                cout << ".";
+            }else{
+                cout << buf.data[i];
+            }
+        }
+        cout << "\n";
     }
 }
